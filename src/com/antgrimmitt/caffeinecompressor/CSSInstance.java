@@ -4,6 +4,8 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.yahoo.platform.yui.compressor.CssCompressor;
+
 /**
  * Created by IntelliJ IDEA.
  * User: ant
@@ -16,6 +18,8 @@ public class CSSInstance {
     StringBuilder cssLines = new StringBuilder();
     protected static List<String> processedCSS = new ArrayList<String>();
 
+    private CssCompressor cssCompressor = new CssCompressor();
+
     public CSSInstance() {
     }
 
@@ -23,12 +27,14 @@ public class CSSInstance {
         if (!imported) {
             cssLines = new StringBuilder();
         }
+        cssCompressor = new CssCompressor();
 
         boolean alreadyProcessed = false;
 
         for (String processedFile : processedCSS) {
             System.out.println("processedFile = " + processedFile);
-            if (cssFile.getAbsoluteFile().equals(processedFile)) {
+            System.out.println("cssFile.getAbsolutePath() = " + cssFile.getAbsolutePath());
+            if (cssFile.getAbsolutePath().equals(processedFile)) {
                 System.out.println("File already processed");
                 alreadyProcessed = true;
                 break;
@@ -46,18 +52,20 @@ public class CSSInstance {
 
                 String line;
                 while ((line = br.readLine()) != null) {
-                    if (line.contains("@import")) {
+                    if (line.startsWith("@import")) {
                         String inlineCSSFile;
                         if (line.contains("\"")) {
-                            inlineCSSFile = line.split("\"")[2];
+                            inlineCSSFile = line.split("\"")[1];
+                            System.out.println("inlineCSSFile = " + inlineCSSFile);
                         } else {
                             inlineCSSFile = line.split("\\(")[1];
                         }
-                        System.out.println("inlineCSSFile = " + inlineCSSFile);
-                        cssLines.append(renderString(new File(directory + inlineCSSFile.replaceAll("\\);", "")), true));
+                        renderString(new File(cssFile.getAbsolutePath().replace(cssFile.getName(),(inlineCSSFile.replaceAll("\\);", "")))), true);
 //                        processedCSS.add(i.getAbsolutePath());
+                    } else {
+//                        cssLines.append(cssCompressor.compress(line));
+                        cssLines.append(line);
                     }
-                    cssLines.append(line.trim());
                 }
 
 
@@ -66,7 +74,10 @@ public class CSSInstance {
             } catch (IOException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
+            System.out.println("final cssFile = " + cssFile.getAbsolutePath());
+            return cssLines.toString();
+        } else {
+            return null;
         }
-        return cssLines.toString();
     }
 }
