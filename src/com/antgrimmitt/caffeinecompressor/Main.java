@@ -19,16 +19,18 @@ public class Main {
     private static File cssDirectory;
     private static File cssOutput;
     private Properties properties;
-    private static File homedir;
+    private static File homedir = null;
     private static boolean monitorFolder = false;
     private static boolean mergeAll;
+    private static File propsFile;
+    private static String  buildno;
 
     public Main() {
 
         properties = new Properties();
 
         try {
-            properties.load(new FileInputStream("caffeine.properties"));
+            properties.load(new FileInputStream(propsFile));
         } catch (IOException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
@@ -49,9 +51,13 @@ public class Main {
             monitorFolder = Boolean.valueOf(properties.getProperty("monitorcssfolder").toString());
         }
 
-        if(properties.get("caffeine.home.directory") != null) {
-            homedir = new File(properties.get("caffeine.home.directory").toString());
-        }
+        /**
+         * needs to be a command line argument
+         */
+
+//        if (properties.get("caffeine.home.directory") != null && homedir == null) {
+//            homedir = new File(properties.get("caffeine.home.directory").toString());
+//        }
 
 
         String[] cssFiles;
@@ -76,7 +82,6 @@ public class Main {
                     + cssFile.trim()), false);
 
             String content = new CssCompressor().compress(css);
-            System.out.println("content = " + content);
             if (!content.equals("null")) {
                 compressedCss.put(cssFile, content);
             }
@@ -88,7 +93,6 @@ public class Main {
         if (!mergeAll) {
 
             for (String compressedCssFile : compressedCss.keySet()) {
-                System.out.println("compressedCssFile = " + compressedCssFile);
                 writeCSSFile(compressedCss.get(compressedCssFile), compressedCssFile);
             }
         } else {
@@ -105,7 +109,7 @@ public class Main {
         boolean sucess = false;
         try {
             BufferedWriter bw = new BufferedWriter(new PrintWriter(new File(homedir + File.separator +
-                     cssOutput + File.separator +  outputFile.replaceAll(".css", ".min.css"))));
+                    cssOutput + File.separator + outputFile.replaceAll(".css","-" + buildno +".min.css"))));
             bw.write(css);
             bw.close();
             sucess = true;
@@ -114,35 +118,34 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
-
         return sucess;
 
     }
 
-    //
     public static void main(String[] args) {
 
         if (args != null) {
 
             for (String arg : args) {
-                System.out.println("arg = " + arg);
-                //css dir argument
-                if (arg.startsWith("-c")) {
-                    cssDirectory = new File(arg.substring(2, arg.length()));
-                    System.out.println("cssDirectory = " + cssDirectory);
-                } else if (arg.startsWith("-o")) { //output directory
-                    cssOutput = new File(arg.substring(2, arg.length()));
-                    System.out.println("cssOutput = " + cssOutput);
-                } else if (arg.startsWith("-h")) {
+                if (arg.startsWith("-d")) {
                     homedir = new File(arg.substring(2, arg.length()));
-                    System.out.println("homedir = " + homedir);
-                } else if (arg.startsWith("-M")) {
-                    monitorFolder = true;
-                } else if (arg.startsWith("-A")) {
-                    mergeAll = true;
+                }
+                if (arg.startsWith("-p")) {
+                    propsFile = new File(arg.substring(2, arg.length()));
+                }
+                if (arg.startsWith("-b")) {
+                    buildno = arg.substring(2, arg.length());
                 }
             }
         }
-        Main main = new Main();
+        if (homedir != null || propsFile != null) {
+            if(buildno == null) {
+                System.err.println("no build number found using current time millis");
+                buildno = String.valueOf(System.currentTimeMillis());
+            }
+            Main main = new Main();
+        } else {
+            System.err.println("You need to me 2 arguments -d{homedir} -p{path/to/caffeine.properties");
+        }
     }
 }

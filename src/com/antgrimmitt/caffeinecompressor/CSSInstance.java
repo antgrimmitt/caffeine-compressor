@@ -32,10 +32,7 @@ public class CSSInstance {
         boolean alreadyProcessed = false;
 
         for (String processedFile : processedCSS) {
-            System.out.println("processedFile = " + processedFile);
-            System.out.println("cssFile.getAbsolutePath() = " + cssFile.getAbsolutePath());
             if (cssFile.getAbsolutePath().equals(processedFile)) {
-                System.out.println("File already processed");
                 alreadyProcessed = true;
                 break;
             }
@@ -56,14 +53,11 @@ public class CSSInstance {
                         String inlineCSSFile;
                         if (line.contains("\"")) {
                             inlineCSSFile = line.split("\"")[1];
-                            System.out.println("inlineCSSFile = " + inlineCSSFile);
                         } else {
                             inlineCSSFile = line.split("\\(")[1];
                         }
-                        renderString(new File(cssFile.getAbsolutePath().replace(cssFile.getName(),(inlineCSSFile.replaceAll("\\);", "")))), true);
-//                        processedCSS.add(i.getAbsolutePath());
+                        renderString(new File(cssFile.getAbsolutePath().replace(cssFile.getName(), (inlineCSSFile.replaceAll("\\);", "")))), true);
                     } else {
-//                        cssLines.append(cssCompressor.compress(line));
                         cssLines.append(line);
                     }
                 }
@@ -74,7 +68,6 @@ public class CSSInstance {
             } catch (IOException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
-            System.out.println("final cssFile = " + cssFile.getAbsolutePath());
             return cssLines.toString();
         } else {
             return null;
